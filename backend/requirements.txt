@@ -1,0 +1,24 @@
+# Core Django
+Django==4.2.7
+django-cors-headers==4.3.1
+django-environ==0.11.2
+whitenoise==6.6.0
+
+# REST Framework
+djangorestframework==3.14.0
+drf-yasg==1.21.7  # Optional for Swagger docs
+
+# Azure Services
+azure-identity==1.14.0
+azure-keyvault-secrets==4.7.0
+azure-storage-blob==12.18.2
+
+# Database
+psycopg2-binary==2.9.9  # For PostgreSQL
+
+# Utilities
+python-dotenv==1.0.0
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Production (optional)
