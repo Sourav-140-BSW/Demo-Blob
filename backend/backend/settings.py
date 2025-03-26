@@ -10,7 +10,12 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'fallback-secret-key')
 
 DEBUG = True  # Change to False in production
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    'localhost', 
+    '127.0.0.1',
+    'your-production-domain.com',
+    '.azurewebsites.net'  # If deploying to Azure App Service
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -25,8 +30,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',  # Should be first
+    'corsheaders.middleware.CorsMiddleware',         # Before CommonMiddleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',    # After SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -53,17 +59,32 @@ TEMPLATES = [
     },
 ]
 
+# settings.py
+# Add to the existing settings
+
+# Azure Blob Storage Settings
+AZURE_STORAGE_ACCOUNT_NAME = os.getenv('AZURE_STORAGE_ACCOUNT_NAME', 'your_account_name')
+AZURE_STORAGE_ACCOUNT_KEY = os.getenv('AZURE_STORAGE_ACCOUNT_KEY', 'your_account_key')
+AZURE_STORAGE_CONTAINER_NAME = os.getenv('AZURE_STORAGE_CONTAINER_NAME', 'your_container_name')
+AZURE_STORAGE_CONNECTION_STRING = f"DefaultEndpointsProtocol=https;AccountName={AZURE_STORAGE_ACCOUNT_NAME};AccountKey={AZURE_STORAGE_ACCOUNT_KEY};EndpointSuffix=core.windows.net"
+
 WSGI_APPLICATION = 'backend.wsgi.application'
 
+CONNECTION = os.environ['AZURE_POSTGRESQL_CONNECTIONSTRING']
+# Replace your current CONNECTION_STR parsing with:
+CONNECTION_STR = dict(pair.split('=', 1) for pair in CONNECTION.split(' ') if '=' in pair)
+# Azure PostgreSQL database configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'klarifai-latest-1',
-        'USER': 'postgres',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
+        'NAME': CONNECTION_STR.get('dbname'),  # Azure PostgreSQL typically uses 'dbname' in connection string
+        'USER': CONNECTION_STR.get('user'),
+        'PASSWORD': CONNECTION_STR.get('password'),
+        'HOST': CONNECTION_STR.get('host'),
         'PORT': '5432',
-    }
+        'OPTIONS': {'sslmode': 'require'},
+        'CONN_MAX_AGE': 600,
+    },
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -81,6 +102,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
