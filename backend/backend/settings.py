@@ -71,22 +71,32 @@ AZURE_STORAGE_CONNECTION_STRING = f"DefaultEndpointsProtocol=https;AccountName={
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-CONNECTION = os.environ['AZURE_POSTGRESQL_CONNECTIONSTRING']
-# Replace your current CONNECTION_STR parsing with:
-CONNECTION_STR = dict(pair.split('=', 1) for pair in CONNECTION.split(' ') if '=' in pair)
-# Azure PostgreSQL database configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': CONNECTION_STR.get('dbname'),  # Azure PostgreSQL typically uses 'dbname' in connection string
-        'USER': CONNECTION_STR.get('user'),
-        'PASSWORD': CONNECTION_STR.get('password'),
-        'HOST': CONNECTION_STR.get('host'),
-        'PORT': '5432',
-        'OPTIONS': {'sslmode': 'require'},
-        'CONN_MAX_AGE': 600,
-    },
-}
+# settings.py
+
+# Database configuration with proper error handling
+try:
+    CONNECTION = os.environ['AZURE_POSTGRESQL_CONNECTIONSTRING']
+    CONNECTION_STR = dict(pair.split('=', 1) for pair in CONNECTION.split(' ') if '=' in pair)
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': CONNECTION_STR.get('dbname', 'fallback_db'),
+            'USER': CONNECTION_STR.get('user', 'fallback_user'),
+            'PASSWORD': CONNECTION_STR.get('password', ''),
+            'HOST': CONNECTION_STR.get('host', 'localhost'),
+            'PORT': CONNECTION_STR.get('port', '5432'),
+            'OPTIONS': {'sslmode': 'require'},
+        }
+    }
+except KeyError:
+    # Fallback to SQLite for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
