@@ -109,4 +109,4 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = ["https://"]
+CORS_ALLOWED_ORIGINS = ["https://victorious-plant-03e42600f.6.azurestaticapps.net"]
